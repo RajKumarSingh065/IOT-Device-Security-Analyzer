@@ -1,0 +1,77 @@
+<section class="summary card">
+  <h2>Summary</h2>
+  <div class="summary-grid">
+    <div>
+      <div class="stat">{{ scan.report.summary.devices_found }}</div>
+      <div class="stat-label">Devices found</div>
+    </div>
+    <div>
+      <div class="stat">{{ scan.report.summary.findings_by_severity.critical + scan.report.summary.findings_by_severity.high }}</div>
+      <div class="stat-label">High/critical findings</div>
+    </div>
+    <div>
+      <div class="stat">{{ scan.report.duration_seconds }}s</div>
+      <div class="stat-label">Scan time</div>
+    </div>
+  </div>
+  <p class="muted">
+    Generated {{ scan.report.generated_at }} &middot;
+    <a href="/api/scan/{{ scan.id }}/report">download JSON</a>
+  </p>
+</section>
+
+{% for device in scan.report.devices %}
+<article class="device card risk-{{ device.risk_level }}">
+  <header class="device-header">
+    <div>
+      <h3>{{ device.ip }}{% if device.hostname %} &middot; <span class="muted">{{ device.hostname }}</span>{% endif %}</h3>
+      <p class="device-meta">
+        {% if device.vendor %}<span class="tag vendor">{{ device.vendor }}</span>{% endif %}
+        {% if device.mac %}<span class="mono">{{ device.mac }}</span>{% endif %}
+      </p>
+    </div>
+    <div class="risk-pill risk-{{ device.risk_level }}">
+      <span class="risk-score">{{ device.risk_score }}</span>
+      <span class="risk-label">{{ device.risk_level }}</span>
+    </div>
+  </header>
+
+  {% if device.open_ports %}
+  <div class="ports">
+    <strong>Open ports:</strong>
+    {% for port in device.open_ports %}
+      <span class="port-chip" title="{{ device.banners.get(port, '') }}">{{ port }}</span>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted">No common IoT ports responded.</p>
+  {% endif %}
+
+  {% if device.findings %}
+  <ul class="findings">
+    {% for f in device.findings %}
+    <li class="finding sev-{{ f.severity }}">
+      <div class="finding-head">
+        <span class="sev-badge sev-{{ f.severity }}">{{ f.severity }}</span>
+        <strong>{{ f.title }}</strong>
+        {% if f.port %}<span class="muted">on port {{ f.port }}</span>{% endif %}
+      </div>
+      <p>{{ f.description }}</p>
+      <p class="rec"><strong>Fix:</strong> {{ f.recommendation }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="ok">No issues detected for this device.</p>
+  {% endif %}
+</article>
+{% endfor %}
+
+<section class="card general-recs">
+  <h2>General recommendations</h2>
+  <ul>
+    {% for rec in scan.report.general_recommendations %}
+      <li>{{ rec }}</li>
+    {% endfor %}
+  </ul>
+</section>

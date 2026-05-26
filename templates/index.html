@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Audit your network's IoT devices</h1>
+  <p class="lede">
+    Discover every device on your subnet, scan {{ port_count }} common IoT ports,
+    and get a prioritized list of fixes &mdash; all from your own machine.
+  </p>
+</section>
+
+<form action="{{ url_for('start_scan') }}" method="post" class="card scan-form">
+  <h2>Start a scan</h2>
+  <label>
+    Subnet (CIDR)
+    <input type="text" name="subnet" value="{{ default_subnet }}" pattern="^\d{1,3}(\.\d{1,3}){3}/\d{1,2}$" required>
+    <small>Detected from your active interface. Adjust if you want to scan a different range.</small>
+  </label>
+  <label>
+    Port connect timeout (seconds)
+    <input type="number" name="timeout" value="1.5" min="0.2" max="10" step="0.1">
+    <small>Lower = faster scan but more missed ports on slow devices.</small>
+  </label>
+  <button type="submit" class="primary">Run scan</button>
+</form>
+
+<section class="card info">
+  <h3>What this tool checks</h3>
+  <ul>
+    <li>Live host discovery via ARP and ICMP</li>
+    <li>TCP scan of common IoT ports (Telnet, FTP, HTTP, RTSP, MQTT, UPnP, CoAP, TR-069, DVR control)</li>
+    <li>Banner-based detection of outdated services (Boa, GoAhead, SSHv1, old OpenSSH)</li>
+    <li>MAC vendor fingerprinting for common IoT brands</li>
+    <li>Risk scoring and a remediation checklist per device</li>
+  </ul>
+  <p class="note">
+    This tool only observes services that are already exposed. It does not
+    attempt credential brute-forcing or exploit delivery.
+  </p>
+</section>
+{% endblock %}

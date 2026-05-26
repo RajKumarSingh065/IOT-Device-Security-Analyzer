@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Scan {{ scan.id }} &mdash; IoT Device Security Analyzer{% endblock %}
+{% block content %}
+<section class="scan-header">
+  <div>
+    <h1>Scan results</h1>
+    <p class="muted">Subnet <code>{{ scan.subnet }}</code> &middot; scan id <code>{{ scan.id }}</code></p>
+  </div>
+  <div class="scan-status" id="status-pill" data-status="{{ scan.status }}">
+    {{ scan.status }}
+  </div>
+</section>
+
+<section id="progress-section" class="card" {% if scan.status == 'complete' %}hidden{% endif %}>
+  <p id="progress-text">Starting scan&hellip;</p>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+</section>
+
+<section id="report-section" {% if scan.status != 'complete' %}hidden{% endif %}>
+  {% if scan.report %}
+    {% include "_report.html" %}
+  {% endif %}
+</section>
+
+<script>
+(function () {
+  const scanId = {{ scan.id | tojson }};
+  const statusPill = document.getElementById("status-pill");
+  const progressSection = document.getElementById("progress-section");
+  const progressText = document.getElementById("progress-text");
+  const progressFill = document.getElementById("progress-fill");
+  const reportSection = document.getElementById("report-section");
+
+  function tick() {
+    fetch("/api/scan/" + scanId)
+      .then(r => r.json())
+      .then(state => {
+        statusPill.textContent = state.status;
+        statusPill.dataset.status = state.status;
+        const total = state.progress.total || 0;
+        const done = state.progress.completed || 0;
+        if (state.status === "discovering") {
+          progressText.textContent = "Discovering live hosts on " + state.subnet + "…";
+          progressFill.style.width = "10%";
+        } else if (state.status === "scanning") {
+          progressText.textContent = "Scanning " + done + " of " + total + " devices…";
+          const pct = total ? Math.max(15, Math.round(done / total * 100)) : 15;
+          progressFill.style.width = pct + "%";
+        } else if (state.status === "complete") {
+          progressFill.style.width = "100%";
+          location.reload();
+          return;
+        }
+        setTimeout(tick, 1500);
+      })
+      .catch(() => setTimeout(tick, 3000));
+  }
+
+  if (statusPill.dataset.status !== "complete") {
+    tick();
+  }
+})();
+</script>
+{% endblock %}

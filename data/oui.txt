@@ -1,0 +1,6 @@
+# User-extensible OUI database for the IoT Device Security Analyzer.
+# Format:   XX:XX:XX  VendorName
+# Comments begin with '#'. Entries here take precedence over built-ins.
+#
+# Example:
+# 12:34:56  Example Corp
